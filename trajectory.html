@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Trajectory Game</title>
+    <link href='https://fonts.googleapis.com/css?family=Play:400,700' rel='stylesheet' type='text/css'>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular.min.js"></script>
+    <script type="text/javascript">
+        angular
+       .module('app', [])
+       .controller('test', [
+      '$scope',
+      '$timeout',
+	  '$q',
+      function ($scope, $timeout, $q) {
+
+          $("#projectile").css({ "left": 10, "top": screen.height * 0.85 - 5 });
+          $("#ground").css({ "top": screen.height * 0.85 });
+          $("#target").css({ "left": screen.width * 0.8, "top": screen.height * 0.85 - 10 });
+          $("#halfway").css({ "left": screen.width * 0.4, "top": screen.height * 0.85 - 10 });
+
+          $scope.targetDist = parseInt(screen.width * 0.8);
+          $scope.halfway = parseInt(screen.width * 0.4);
+          var t = 0;
+          var g = 32.174;
+          var vx;
+          var vy;
+          $scope.dispX = 0;
+          $scope.dispY = 5;
+          $scope.simulate = function () {
+              vx = $scope.speed * Math.cos($scope.angle / 360 * 2 * Math.PI);
+              vy = $scope.speed * Math.sin($scope.angle / 360 * 2 * Math.PI);
+              moveIt(10);
+          };
+
+          $scope.reset = function () {
+              vx = 0;
+              vy = 0;
+              $scope.dispX = 0;
+              $scope.dispY = 5;
+              t = 0;
+              $("#projectile").css({ "left": 10, "top": screen.height * 0.85 - 5 });
+          }
+
+          var moveIt = function (delay) {
+              var defered = $q.defer();
+              var timer = $timeout(function () {
+              }, delay).then(function (result) {
+                  defered.resolve(result);
+                  var dt = delay / 1000.0;
+                  vx = vx;
+                  vy = vy - g * delay / 1000.0;
+                  var x = $("#projectile").position().left + vx * dt;
+                  var y = $("#projectile").position().top - vy * dt;
+                  $scope.dispX = parseInt(x);
+                  $scope.dispY = parseInt(y - screen.height * 0.85 + 5);
+                  $scope.time = t;
+                  $("#projectile").css({ "left": x, "top": y });
+                  if (y < screen.height * 0.85 & y > 0 & x < screen.width) {
+                      //$timeout.cancel(timer);
+                      moveIt(delay);
+                      t++;
+                  }
+                  else {
+                      $timeout.cancel(timer);
+                  };
+              });
+              return defered.promise;
+          }
+
+      }])
+    </script>
+    <style type="text/css">
+        body {
+            padding-right: 20px;
+            font-family: 'Play', sans-serif;
+        }
+
+        #projectile, #ground, #target, #halfway {
+            position: absolute;
+        }
+
+        #ground {
+            width: 100%;
+        }
+        .inputText {
+            width:150px;
+            height:20px;
+        }
+    </style>
+</head>
+<body ng-app="app" ng-controller="test">
+    Launch Speed: <input class="inputText" type="number" placeholder="Speed (ft/s)" min="1" max="1000" ng-model="speed" />
+    Angle: <input class="inputText" type="number" placeholder="Angle (deg)" min="0" max="90" ng-model="angle" />
+    <button  ng-click="simulate()">Launch Projectile</button> &nbsp; t: {{time}}(ms) X: {{dispX}} ft. Y: {{dispY}} ft. 
+    <button ng-click="reset()">Reset</button>
+    <div id="projectile">X</div>
+    <div id="halfway">| {{halfway}} ft</div>
+    <div id="target">[Target] ({{targetDist}} ft)</div>
+    <div id="ground"><hr /></div>
+</body>
+</html>
